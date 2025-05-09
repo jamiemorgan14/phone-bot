@@ -8,15 +8,13 @@ const { jamieResumePrompt } = require('./prompts')
 const app = express();
 const port = 3000;
 
-
-// Initialize OpenAI
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
 app.use(express.urlencoded({ extended: true }));
 
-// Define the system prompt with resume content
+// Get the resume prompt
 const systemPrompt = jamieResumePrompt;
 
 // Handle incoming call
@@ -31,7 +29,6 @@ app.post('/incoming-call', (req, res) => {
         Note that you can end this call at any time by saying, 'end call'`
     );
 
-    // Gather speech input
     response.gather({
         input: 'speech',
         timeout: 8,
@@ -44,7 +41,7 @@ app.post('/incoming-call', (req, res) => {
     res.send(response.toString());
 });
 
-// Handle speech input
+// Handle Conversation
 app.post('/process-call', async (req, res) => {
     const userSpeech = req.body.SpeechResult?.toLowerCase() || '';
 
@@ -62,7 +59,7 @@ app.post('/process-call', async (req, res) => {
     // Create a response for the caller
     const voiceResponse = new twiml.VoiceResponse();
 
-    // End the call if the user says "no" or "end call"
+    // End the call if the user says "end call"
     if (userSpeech.includes('end call')) {
         voiceResponse.say({ voice: 'Polly.Matthew-Neural', language: 'en-GB' }, "Okay, thank you for using Jamie's virtual phone assistant, have a nice day.");
         voiceResponse.hangup();
@@ -88,9 +85,6 @@ app.post('/process-call', async (req, res) => {
     res.type('text/xml');
     res.send(voiceResponse.toString());
 });
-
-
-
 
 // Start the server
 app.listen(port, () => {
